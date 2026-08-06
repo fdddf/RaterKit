@@ -18,14 +18,14 @@ App 评分引导 + 用户反馈收集的 iOS 客户端。Swift Package，iOS 17+
                                     rater-collector
 ```
 
-服务端是一个独立仓库：**[rater-collector](https://github.com/<you>/rater-collector)**（Cloudflare Worker + D1 + R2，自带管理后台）。先把它部署好拿到 API Key，再回来接客户端。
+服务端是一个独立仓库：**[rater-collector](https://github.com/fdddf/rater-collector)**（Cloudflare Worker + D1 + R2，自带管理后台）。先把它部署好拿到 API Key，再回来接客户端。
 
 ## 安装
 
 `Package.swift` 或 Xcode → Add Package Dependency：
 
 ```swift
-.package(url: "https://github.com/<you>/RaterKit.git", from: "1.0.0")
+.package(url: "https://github.com/fdddf/RaterKit.git", from: "1.0.0")
 ```
 
 ## 用起来
@@ -38,7 +38,8 @@ struct MyApp: App {
     init() {
         Rater.configure(
             .init(
-                endpoint: URL(string: "https://rater-collector.<you>.workers.dev")!,
+                // 部署 rater-collector 后 wrangler 会打印出这个地址
+                endpoint: URL(string: "https://rater-collector.<你的-cf-子域>.workers.dev")!,
                 appID: "my-app",
                 apiKey: "rk_live_xxx",
                 appStoreID: "123456789"
