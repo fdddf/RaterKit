@@ -43,7 +43,7 @@ struct MyApp: App {
                 // wrangler prints this URL when you deploy rater-collector
                 endpoint: URL(string: "https://rater-collector.<your-cf-subdomain>.workers.dev")!,
                 appID: "my-app",
-                apiKey: "rk_live_xxx",
+                apiKey: "rtr_pub_xxx",
                 appStoreID: "123456789"
             )
         )

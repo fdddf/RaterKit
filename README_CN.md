@@ -43,7 +43,7 @@ struct MyApp: App {
                 // 部署 rater-collector 后 wrangler 会打印出这个地址
                 endpoint: URL(string: "https://rater-collector.<你的-cf-子域>.workers.dev")!,
                 appID: "my-app",
-                apiKey: "rk_live_xxx",
+                apiKey: "rtr_pub_xxx",
                 appStoreID: "123456789"
             )
         )

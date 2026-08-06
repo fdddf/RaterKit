@@ -187,7 +187,7 @@ struct ContentView: View {
                     .autocorrectionDisabled()
             }
             LabeledContent("API key") {
-                TextField("rk_live_…", text: $settings.apiKey)
+                TextField("rtr_pub_…", text: $settings.apiKey)
                     .multilineTextAlignment(.trailing)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()

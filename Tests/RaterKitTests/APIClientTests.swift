@@ -5,7 +5,7 @@ import Testing
 private let endpoint = URL(string: "https://example.test")!
 
 private func makeClient(_ transport: MockTransport) -> RaterAPIClient {
-    RaterAPIClient(endpoint: endpoint, apiKey: "rk_live_test", transport: transport)
+    RaterAPIClient(endpoint: endpoint, apiKey: "rtr_pub_test", transport: transport)
 }
 
 @Suite("API client")
@@ -16,7 +16,7 @@ struct APIClientTests {
         let transport = MockTransport([.init(json: configJSON)])
         _ = try await makeClient(transport).fetchConfig(version: "1.0", locale: "zh-Hans", etag: nil)
 
-        #expect(transport.requests.first?.value(forHTTPHeaderField: "X-Rater-Key") == "rk_live_test")
+        #expect(transport.requests.first?.value(forHTTPHeaderField: "X-Rater-Key") == "rtr_pub_test")
     }
 
     @Test("the config request carries version and locale")

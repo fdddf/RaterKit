@@ -8,7 +8,7 @@ public struct RaterConfiguration: Sendable {
     public var endpoint: URL
     /// The app id registered on the server.
     public var appID: String
-    /// The API key issued by the server (`rk_live_…`).
+    /// The API key issued by the server (`rtr_pub_…`).
     public var apiKey: String
 
     // MARK: Optional

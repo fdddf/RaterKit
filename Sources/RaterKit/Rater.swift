@@ -6,7 +6,7 @@ import os
 /// RaterKit's main entry point.
 ///
 /// ```swift
-/// Rater.configure(.init(endpoint: …, appID: "my-app", apiKey: "rk_live_…"))
+/// Rater.configure(.init(endpoint: …, appID: "my-app", apiKey: "rtr_pub_…"))
 /// ContentView().raterPrompt()          // mount the presentation host
 /// Rater.shared.record(event: "export") // record meaningful moments
 /// ```
