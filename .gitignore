@@ -8,3 +8,6 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 Package.resolved
+
+# Internal handoff notes — contains local absolute paths, never published.
+docs/

@@ -143,10 +143,6 @@ The fallback copy in `RaterCopy.default` (`Sources/RaterKit/Configuration/RaterC
 
 Change one side, change the other. It's the one invariant that splitting into two repositories left for a human to watch.
 
-## Progress
-
-Build status, pitfalls already hit, and remaining work: [docs/PROGRESS.md](docs/PROGRESS.md) (Chinese).
-
 ## License
 
 MIT

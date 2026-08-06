@@ -143,10 +143,6 @@ xcodebuild -scheme RaterKit -destination 'platform=iOS Simulator,name=iPhone 17 
 
 改任何一边都要同步改另一边。这是拆成两个仓库后唯一需要人工看住的地方。
 
-## 开发进度
-
-施工状态、已踩的坑、剩余工作见 [docs/PROGRESS.md](docs/PROGRESS.md)。
-
 ## 许可
 
 MIT
