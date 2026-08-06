@@ -1,34 +1,36 @@
 # RaterKit
 
-App 评分引导 + 用户反馈收集的 iOS 客户端。Swift Package，iOS 17+，纯 SwiftUI，零三方依赖。
+[中文](README_CN.md)
 
-在你自定义的时机弹出预询问；用户满意就走系统评分弹窗，不满意就打开内建反馈表单（邮箱 + 正文 + 截图 + 设备/版本信息）。
+Rating prompts and user feedback for iOS, done once and shared across your apps. Swift Package, iOS 17+, pure SwiftUI, no third-party dependencies.
+
+Ask first, at a moment you choose. Happy users go to the system review prompt; unhappy ones get a built-in feedback form instead — message, screenshots, email, and device details — so the complaint reaches you rather than the App Store.
 
 ```
                         ┌──────────────┐
-   你的 App ──触发──▶  │  预询问弹窗   │ ← 文案由服务端下发，改文案不用发版
+   Your app ──trigger─▶ │  Pre-prompt  │ ← copy comes from the server; no app release to change it
                         └──────┬───────┘
-                     「喜欢」   │   「不喜欢」
-                   ┌───────────┴───────────┐
+                    "I like it" │ "Not quite"
+                   ┌────────────┴──────────┐
                    ▼                       ▼
-          系统评分弹窗              内建反馈表单
-      (AppStore.requestReview)   邮箱/正文/截图/设备信息
+         System review prompt       Built-in feedback form
+      (AppStore.requestReview)   email / message / screenshots
                                           │
                                           ▼
-                                    rater-collector
+                                   rater-collector
 ```
 
-服务端是一个独立仓库：**[rater-collector](https://github.com/fdddf/rater-collector)**（Cloudflare Worker + D1 + R2，自带管理后台）。先把它部署好拿到 API Key，再回来接客户端。
+The server is a separate repository: **[rater-collector](https://github.com/fdddf/rater-collector)** (Cloudflare Worker + D1 + R2, with a built-in admin console). Deploy it first and register an app to get an API key, then come back here.
 
-## 安装
+## Installation
 
-`Package.swift` 或 Xcode → Add Package Dependency：
+In `Package.swift`, or Xcode → Add Package Dependency:
 
 ```swift
 .package(url: "https://github.com/fdddf/RaterKit.git", from: "1.0.0")
 ```
 
-## 用起来
+## Usage
 
 ```swift
 import RaterKit
@@ -38,8 +40,8 @@ struct MyApp: App {
     init() {
         Rater.configure(
             .init(
-                // 部署 rater-collector 后 wrangler 会打印出这个地址
-                endpoint: URL(string: "https://rater-collector.<你的-cf-子域>.workers.dev")!,
+                // wrangler prints this URL when you deploy rater-collector
+                endpoint: URL(string: "https://rater-collector.<your-cf-subdomain>.workers.dev")!,
                 appID: "my-app",
                 apiKey: "rk_live_xxx",
                 appStoreID: "123456789"
@@ -55,36 +57,36 @@ struct MyApp: App {
 }
 ```
 
-在关键动作处埋点，规则满足时自动弹：
+Record the moments that matter, and let the rules decide when to ask:
 
 ```swift
 Rater.shared.record(event: "export_completed")
 await Rater.shared.promptIfEligible()
 ```
 
-## 四种调用姿势
+## Four ways in
 
 ```swift
-await Rater.shared.promptIfEligible()     // 规则满足才弹（最常用）
-Rater.shared.record(event: "export")      // 关键动作埋点
-await Rater.shared.presentPrompt()        // 强制弹，绕过规则（设置页入口）
-Rater.shared.presentFeedbackForm()        // 直接打开反馈表单
+await Rater.shared.promptIfEligible()     // asks only if every rule passes (the common case)
+Rater.shared.record(event: "export")      // record a significant action
+await Rater.shared.presentPrompt()        // force the prompt, bypassing rules (settings screen)
+Rater.shared.presentFeedbackForm()        // open the feedback form directly
 ```
 
-SwiftUI 挂载：根视图加 `.raterPrompt()`；想在设置页单开反馈表单用 `.raterFeedbackSheet(isPresented:)`（自带 sheet，不依赖前者）。UIKit 宿主用 `RaterUIKitPresenter`。
+In SwiftUI, attach `.raterPrompt()` to your root view. For a standalone "Send feedback" entry in a settings screen, use `.raterFeedbackSheet(isPresented:)` — it brings its own sheet and doesn't depend on the former. UIKit hosts use `RaterUIKitPresenter`.
 
-## 触发规则
+## Trigger rules
 
-这是主要的可定制点。所有规则**全部通过**才会弹：
+This is the main thing you'll customize. **Every** rule must pass before the pre-prompt appears:
 
 ```swift
 Rater.configure(.init(
     endpoint: ..., appID: ..., apiKey: ...,
     rules: [
-        .notAfterRated,                 // 评过就不再打扰
-        .notAfterOptOut,                // 明确拒绝过就不再打扰
-        .remoteEnabled,                 // 服务端可随时全量关停
-        .anyOf([                        // 任一满足即可
+        .notAfterRated,                 // never ask someone who already rated
+        .notAfterOptOut,                // never ask someone who said no
+        .remoteEnabled,                 // the server can switch it off at any time
+        .anyOf([                        // either one of these is enough
             .event("export", atLeast: 2),
             .daysSinceInstall(atLeast: 1),
         ]),
@@ -95,56 +97,56 @@ Rater.configure(.init(
 ))
 ```
 
-不传 `rules` 时用 `RaterConfiguration.defaultRules`：装了 3 天 + 启动过 5 次 + 本版本没弹过 + 距上次弹超过 60 天 + 没评过也没拒过 + 服务端没关停。多数工具类 app 可以直接用。
+Omit `rules` and you get `RaterConfiguration.defaultRules`: installed at least 3 days, launched at least 5 times, not already prompted on this version, at least 60 days since the last prompt, never again once rated or opted out, and the server can shut it off. That's a reasonable shipping default for most utility apps.
 
-其中 `daysSinceInstall` / `launchCount` / `totalEvents` / `cooldown` / `maxPromptsPerVersion` **五条会优先读服务端下发的阈值**，代码里写的数字只是默认值 —— 这就是「不发版调触发时机」的实现方式。
+Five of the built-ins — `daysSinceInstall`, `launchCount`, `totalEvents`, `cooldown`, `maxPromptsPerVersion` — **read server-pushed thresholds first**, treating the numbers in your code as defaults. That's how prompt timing gets tuned without shipping an app update.
 
-调试时开 `isDebugLoggingEnabled: true`，或直接看 `evaluate()`：引擎**刻意不短路**，`TriggerDecision.blockedBy` 会一次列出所有没过的规则，而不是只报第一条。
+While tuning, set `isDebugLoggingEnabled: true` or inspect a decision directly. The engine **deliberately doesn't short-circuit**, so `blockedBy` lists every rule that failed rather than just the first:
 
 ```swift
 let decision = await Rater.shared.evaluate()
-print(decision.blockedBy)   // 例如 ["launchCount(atLeast: 5)", "cooldown(days: 60)"]
+print(decision.blockedBy)   // e.g. ["launchCount(atLeast: 5)", "cooldown(days: 60)"]
 ```
 
-## 其它已实现的东西
+## What else is in the box
 
-- **远程配置**两层缓存（内存 + 磁盘）+ ETag + 并发合流，`configCacheTTL` 默认 6 小时
-- **离线重试队列**：提交失败落盘，`NWPathMonitor` 网络恢复后自动重放，幂等 key 保证服务端不会出现重复记录，5 次后放弃
-- **截图**自动降采样 + JPEG 压缩（默认长边 1600px / 质量 0.7）
-- **诊断信息**采集，并在表单里对用户透明展示「将会发送什么」
-- **埋点**批量上报，不含任何用户标识
-- **String Catalog**（en / zh-Hans / ja / de，源语言 en）
+- **Remote config** with a two-layer cache (memory + disk), ETag revalidation, and request coalescing. `configCacheTTL` defaults to 6 hours.
+- **Offline retry queue** — a failed submission is persisted and replayed once `NWPathMonitor` sees the network return. The idempotency key means a replay can never produce a duplicate server-side; it gives up after 5 attempts.
+- **Screenshots** downsampled and JPEG-compressed (long edge 1600px, quality 0.7 by default).
+- **Diagnostics** collected and shown to the user in the form, so they can see exactly what will be sent.
+- **Telemetry** batched and free of user identifiers.
+- **String Catalog** — en, zh-Hans, ja, de, with English as the source language.
 
-隐私相关的三个开关都可以单独关：`collectsDiagnostics`、`isTelemetryEnabled`、`isOfflineRetryEnabled`。
+The three privacy-relevant behaviors each have their own switch: `collectsDiagnostics`, `isTelemetryEnabled`, `isOfflineRetryEnabled`.
 
-## 示例 App
+## Example app
 
-`Example/RaterDemo/` 是可直接跑的 SwiftUI demo，通过相对路径引用本仓库的包。设置页可以直接填 API Key 和 base URL，`configCacheTTL` 调成了 5 秒，方便在后台改完文案立刻看到效果。
+`Example/RaterDemo/` is a runnable SwiftUI demo that consumes this package by relative path. Its settings screen takes an API key and base URL at runtime, and `configCacheTTL` is set to 5 seconds so a copy change made in the admin console shows up almost immediately.
 
 ```bash
 cd Example/RaterDemo && xcodegen generate && open RaterDemo.xcodeproj
 ```
 
-本地联调需要同时跑着服务端（在 rater-collector 仓库里 `npx wrangler dev`）。
+You'll want the server running alongside it (`npx wrangler dev` in the rater-collector repo).
 
-## 测试
+## Tests
 
 ```bash
 xcodebuild -scheme RaterKit -destination 'platform=iOS Simulator,name=iPhone 17 Pro' test
 ```
 
-包是 iOS-only 的，`swift test` 在 macOS 宿主上跑不了，必须走模拟器。
+The package is iOS-only, so `swift test` can't run it on the macOS host — it has to go through a simulator.
 
-## ⚠️ 与服务端的契约
+## ⚠️ Contract with the server
 
-`RaterCopy.default`（`Sources/RaterKit/Configuration/RaterConfiguration.swift`）里的兜底文案，必须和 rater-collector 仓库 `src/routes/config.ts` 里的 `FALLBACK` **逐字一致** —— 一个是客户端离线时的兜底，一个是服务端没配文案时的兜底，用户可能在两次启动间分别看到这两份，不一致会显得很奇怪。
+The fallback copy in `RaterCopy.default` (`Sources/RaterKit/Configuration/RaterConfiguration.swift`) must stay **word-for-word identical** to `FALLBACK` in the rater-collector repo's `src/routes/config.ts`. One is what the client shows when it's offline; the other is what the server sends when no copy is configured. The same user can hit both across two launches, and any difference reads as a bug.
 
-改任何一边都要同步改另一边。这是拆成两个仓库后唯一需要人工看住的地方。
+Change one side, change the other. It's the one invariant that splitting into two repositories left for a human to watch.
 
-## 开发进度
+## Progress
 
-施工状态、已踩的坑、剩余工作见 [docs/PROGRESS.md](docs/PROGRESS.md)。
+Build status, pitfalls already hit, and remaining work: [docs/PROGRESS.md](docs/PROGRESS.md) (Chinese).
 
-## 许可
+## License
 
 MIT
