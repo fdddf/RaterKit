@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: RaterKit (iOS)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        run: xcodebuild -version && swift --version
+
+      # The package is iOS-only, so `swift build` on the macOS host is not an option —
+      # tests run on a simulator. The device is resolved at run time rather than pinned by
+      # name, since the preinstalled simulator set changes with the runner image.
+      - name: Pick a simulator
+        id: sim
+        run: |
+          udid=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          for runtime, entries in sorted(devices.items()):
+              if "iOS" not in runtime:
+                  continue
+              for entry in entries:
+                  if entry["name"].startswith("iPhone"):
+                      print(entry["udid"])
+                      sys.exit(0)
+          sys.exit("no iPhone simulator available")
+          ')
+          echo "Using simulator $udid"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        run: |
+          xcodebuild test \
+            -scheme RaterKit \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO
+
+  demo:
+    name: Demo app builds
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      # The demo consumes the package by relative path, so this also proves the package
+      # is still consumable as a dependency and not just as a standalone scheme.
+      - name: Generate project
+        working-directory: Example/RaterDemo
+        run: xcodegen generate
+
+      - name: Pick a simulator
+        id: sim
+        run: |
+          udid=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          for runtime, entries in sorted(devices.items()):
+              if "iOS" not in runtime:
+                  continue
+              for entry in entries:
+                  if entry["name"].startswith("iPhone"):
+                      print(entry["udid"])
+                      sys.exit(0)
+          sys.exit("no iPhone simulator available")
+          ')
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        working-directory: Example/RaterDemo
+        run: |
+          xcodebuild build \
+            -project RaterDemo.xcodeproj \
+            -scheme RaterDemo \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO
