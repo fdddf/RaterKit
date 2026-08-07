@@ -115,7 +115,7 @@ print(decision.blockedBy)   // 例如 ["launchCount(atLeast: 5)", "cooldown(days
 - **截图**自动降采样 + JPEG 压缩（默认长边 1600px / 质量 0.7）
 - **诊断信息**采集，并在表单里对用户透明展示「将会发送什么」
 - **埋点**批量上报，不含任何用户标识
-- **String Catalog**（en / zh-Hans / ja / de，源语言 en）
+- **String Catalog** 共 11 种语言（en / de / es / fr / it / ja / ko / pt / ru / zh-Hans / zh-Hant，源语言 en）。这里只包含表单自身的界面文案；触发弹窗的文案和分类标签来自远程配置，需要在后台翻译。
 
 隐私相关的三个开关都可以单独关：`collectsDiagnostics`、`isTelemetryEnabled`、`isOfflineRetryEnabled`。
 

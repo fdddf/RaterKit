@@ -115,7 +115,7 @@ print(decision.blockedBy)   // e.g. ["launchCount(atLeast: 5)", "cooldown(days: 
 - **Screenshots** downsampled and JPEG-compressed (long edge 1600px, quality 0.7 by default).
 - **Diagnostics** collected and shown to the user in the form, so they can see exactly what will be sent.
 - **Telemetry** batched and free of user identifiers.
-- **String Catalog** — en, zh-Hans, ja, de, with English as the source language.
+- **String Catalog** — 11 languages (en, de, es, fr, it, ja, ko, pt, ru, zh-Hans, zh-Hant), with English as the source language. This covers the form's own chrome; the pre-prompt copy and category labels come from remote config, so translate those in the admin console.
 
 The three privacy-relevant behaviors each have their own switch: `collectsDiagnostics`, `isTelemetryEnabled`, `isOfflineRetryEnabled`.
 
