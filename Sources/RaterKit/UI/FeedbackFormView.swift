@@ -191,10 +191,16 @@ struct FeedbackFormView: View {
         } description: {
             Text("rater.form.thanksMessage", bundle: .module)
         } actions: {
-            Button(String(localized: "rater.form.done", defaultValue: "Done", bundle: .module)) {
+            Button {
                 onDismiss()
+            } label: {
+                // Short labels ("Done", "完成") leave the default pill too tight,
+                // so the button gets its width from padding rather than the text.
+                Text("rater.form.done", bundle: .module)
+                    .padding(.horizontal, 24)
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.large)
             .tint(theme.accent)
         }
     }
