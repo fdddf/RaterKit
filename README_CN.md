@@ -73,7 +73,7 @@ await Rater.shared.presentPrompt()        // 强制弹，绕过规则（设置�
 Rater.shared.presentFeedbackForm()        // 直接打开反馈表单
 ```
 
-SwiftUI 挂载：根视图加 `.raterPrompt()`；想在设置页单开反馈表单用 `.raterFeedbackSheet(isPresented:)`（自带 sheet，不依赖前者）。UIKit 宿主用 `RaterUIKitPresenter`。
+SwiftUI 挂载：根视图加 `.raterPrompt()`。设置页若本身是 sheet，它盖在根视图之上，从里面弹出的评分卡会被画在看不见的地方——改用两个独立入口：评分行用 `.raterRatingPrompt(isPresented:)`，反馈行用 `.raterFeedbackSheet(isPresented:)`，两者都自带弹出层，不依赖 `.raterPrompt()`。UIKit 宿主用 `RaterUIKitPresenter`。
 
 ## 触发规则
 

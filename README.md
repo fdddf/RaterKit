@@ -73,7 +73,7 @@ await Rater.shared.presentPrompt()        // force the prompt, bypassing rules (
 Rater.shared.presentFeedbackForm()        // open the feedback form directly
 ```
 
-In SwiftUI, attach `.raterPrompt()` to your root view. For a standalone "Send feedback" entry in a settings screen, use `.raterFeedbackSheet(isPresented:)` — it brings its own sheet and doesn't depend on the former. UIKit hosts use `RaterUIKitPresenter`.
+In SwiftUI, attach `.raterPrompt()` to your root view. A settings screen presented as a sheet is *above* that root, so a prompt raised from inside one would be drawn where nobody can see it: use the two standalone entries instead — `.raterRatingPrompt(isPresented:)` for a "Rate this app" row and `.raterFeedbackSheet(isPresented:)` for "Send feedback". Both present themselves and neither depends on `.raterPrompt()`. UIKit hosts use `RaterUIKitPresenter`.
 
 ## Trigger rules
 

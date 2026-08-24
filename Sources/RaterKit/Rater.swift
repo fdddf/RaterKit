@@ -149,6 +149,13 @@ public final class Rater {
     /// Shows the pre-prompt regardless of the rules. Suited to a deliberate entry point
     /// such as Settings → Rate this app.
     public func presentPrompt() async {
+        presentation = .prompt(await preparePrompt())
+    }
+
+    /// Fetches the copy and records that a prompt was shown, without raising the
+    /// host mounted by `.raterPrompt()` — for a presenter that brings its own,
+    /// such as `.raterRatingPrompt(isPresented:)`.
+    func preparePrompt() async -> RaterCopy {
         let config = await refreshRemoteConfig()
         let version = DeviceInfo.current.appVersion
 
@@ -158,8 +165,8 @@ public final class Rater {
             state.promptCountByVersion[version, default: 0] += 1
         }
 
-        presentation = .prompt(config.copy)
         emit(.promptShown)
+        return config.copy
     }
 
     /// Opens the feedback form directly, skipping the pre-prompt. Suited to
@@ -227,9 +234,16 @@ public final class Rater {
     }
 
     func handleNegative() {
+        recordNegative()
+        presentFeedbackForm()
+    }
+
+    /// The negative answer on its own, for a presenter that opens the form itself.
+    /// Raising the shared form from here would ask a screen that is already inside
+    /// a sheet to present a second one.
+    func recordNegative() {
         presentation = nil
         emit(.ratedNegative)
-        presentFeedbackForm()
     }
 
     func handleDismiss(optOut: Bool) {
