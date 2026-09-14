@@ -5,11 +5,11 @@ import Foundation
 public enum RaterOutcome: Sendable, Equatable {
     /// The pre-prompt was shown.
     case promptShown
-    /// The user tapped the positive button; the system review prompt follows.
-    case ratedPositive
-    /// The user tapped the negative button; the feedback form follows.
-    case ratedNegative
-    /// The user tapped "maybe later" or tapped outside the card.
+    /// The user tapped Rate; the App Store review page follows.
+    case rateChosen
+    /// The user tapped Feedback; the feedback form follows.
+    case feedbackChosen
+    /// The user tapped the close button or outside the card.
     case promptDismissed
     /// The user chose never to be asked again.
     case optedOut
@@ -26,8 +26,9 @@ public enum RaterOutcome: Sendable, Equatable {
     var telemetryKind: String? {
         switch self {
         case .promptShown: "shown"
-        case .ratedPositive: "positive"
-        case .ratedNegative: "negative"
+        // The server's telemetry kinds keep their original names.
+        case .rateChosen: "positive"
+        case .feedbackChosen: "negative"
         case .promptDismissed, .optedOut: "dismissed"
         case .feedbackSubmitted: "submitted"
         case .feedbackOpened, .feedbackFailed, .promptSuppressed: nil

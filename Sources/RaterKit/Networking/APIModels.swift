@@ -16,14 +16,16 @@ struct RemoteConfigResponse: Codable, Sendable, Equatable {
     struct Prompt: Codable, Sendable, Equatable {
         var title: String
         var message: String
-        var positiveLabel: String
-        var negativeLabel: String
+        var rateLabel: String
+        var feedbackLabel: String
         var laterLabel: String
 
         enum CodingKeys: String, CodingKey {
             case title, message
-            case positiveLabel = "positive_label"
-            case negativeLabel = "negative_label"
+            // The wire names predate the Rate / Feedback split and are kept so every
+            // client already in the field keeps decoding the same response.
+            case rateLabel = "positive_label"
+            case feedbackLabel = "negative_label"
             case laterLabel = "later_label"
         }
     }

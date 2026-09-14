@@ -23,7 +23,7 @@ struct ConfigLoaderTests {
         let config = await loader.configuration(appVersion: "1.0", locale: "zh-Hans")
 
         #expect(config.copy.promptTitle == "Working out for you?")
-        #expect(config.copy.positiveLabel == "Pretty good")
+        #expect(config.copy.rateLabel == "Pretty good")
         #expect(config.isEnabled)
     }
 

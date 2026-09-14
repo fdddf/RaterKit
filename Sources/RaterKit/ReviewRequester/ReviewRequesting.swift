@@ -12,8 +12,8 @@ public protocol ReviewRequesting: Sendable {
 ///
 /// Note that the system throttles this prompt itself (at most three times a year, and
 /// users can switch it off entirely in Settings), so calling it does not guarantee
-/// anything appears. That's exactly why the pre-prompt exists: it spends this scarce
-/// opportunity only on users who already said they're happy.
+/// anything appears. That's why the pre-prompt's Rate button opens the write-review
+/// page instead, and only falls back to this without an App Store id.
 @MainActor
 public struct StoreKitReviewRequester: ReviewRequesting {
     public init() {}
@@ -45,9 +45,8 @@ struct EnvironmentReviewRequester: ReviewRequesting {
 public extension Rater {
     /// Opens the App Store's "write a review" page directly.
     ///
-    /// Unlike the system prompt this always leaves the app, so it belongs on a
-    /// deliberate entry point such as a settings row — not as a substitute for
-    /// `presentPrompt()`.
+    /// Unlike the system prompt this always leaves the app, so it belongs behind a
+    /// deliberate tap — a settings row, or the pre-prompt's Rate button.
     @discardableResult
     func openWriteReviewPage() -> Bool {
         guard let appStoreID = resolvedAppStoreID,

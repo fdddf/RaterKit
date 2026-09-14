@@ -4,17 +4,17 @@
 
 Rating prompts and user feedback for iOS, done once and shared across your apps. Swift Package, iOS 17+, pure SwiftUI, no third-party dependencies.
 
-Ask first, at a moment you choose. Happy users go to the system review prompt; unhappy ones get a built-in feedback form instead — message, screenshots, email, and device details — so the complaint reaches you rather than the App Store.
+Ask at a moment you choose, and offer both ways to be heard side by side: rate the app on the App Store, or send feedback through a built-in form — message, screenshots, email, and device details. Everyone sees both choices; nothing is filtered by how the user feels, which App Review rejects as review gating (Guideline 5.6.1).
 
 ```
                         ┌──────────────┐
    Your app ──trigger─▶ │  Pre-prompt  │ ← copy comes from the server; no app release to change it
                         └──────┬───────┘
-                    "I like it" │ "Not quite"
+                   "Rate App"  │  "Feedback" 
                    ┌────────────┴──────────┐
                    ▼                       ▼
-         System review prompt       Built-in feedback form
-      (AppStore.requestReview)   email / message / screenshots
+        App Store review page       Built-in feedback form
+         (write-review link)     email / message / screenshots
                                           │
                                           ▼
                                    rater-collector
@@ -27,7 +27,7 @@ The server is a separate repository: **[rater-collector](https://github.com/fddd
 In `Package.swift`, or Xcode → Add Package Dependency:
 
 ```swift
-.package(url: "https://github.com/fdddf/RaterKit.git", from: "1.0.0")
+.package(url: "https://github.com/fdddf/RaterKit.git", from: "2.0.0")
 ```
 
 ## Usage

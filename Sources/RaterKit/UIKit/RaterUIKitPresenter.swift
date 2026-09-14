@@ -31,15 +31,15 @@ public enum RaterUIKitPresenter {
             rootView: RatingPromptView(
                 copy: copy,
                 theme: rater.currentTheme,
-                onPositive: { [weak presenter] in
+                onRate: { [weak presenter] in
                     presenter?.presentedViewController?.dismiss(animated: false)
-                    rater.handlePositive()
+                    rater.handleRate()
                 },
-                onNegative: { [weak presenter] in
+                onFeedback: { [weak presenter] in
                     presenter?.presentedViewController?.dismiss(animated: false) {
                         Task { await presentFeedbackForm(from: presenter) }
                     }
-                    rater.handleNegative()
+                    rater.handleFeedback()
                 },
                 onDismiss: { [weak presenter] optOut in
                     presenter?.presentedViewController?.dismiss(animated: false)

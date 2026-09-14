@@ -7,67 +7,67 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enjoying this app?"
+            "value": "Help us improve"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "喜欢这个 App 吗？"
+            "value": "帮我们做得更好"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このアプリはいかがですか？"
+            "value": "改善にご協力ください"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gefällt dir diese App?"
+            "value": "Hilf uns, besser zu werden"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Te gusta esta app?"
+            "value": "Ayúdanos a mejorar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette app vous plaît ?"
+            "value": "Aidez-nous à nous améliorer"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ti piace questa app?"
+            "value": "Aiutaci a migliorare"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 앱이 마음에 드세요?"
+            "value": "더 나은 앱이 되도록 도와주세요"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Está a gostar desta app?"
+            "value": "Ajude-nos a melhorar"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нравится это приложение?"
+            "value": "Помогите нам стать лучше"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "喜歡這個 App 嗎？"
+            "value": "幫我們做得更好"
           }
         }
       }
@@ -143,144 +143,144 @@
         }
       }
     },
-    "rater.prompt.positive": {
+    "rater.prompt.rate": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "I like it"
+            "value": "Rate App"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "喜欢"
+            "value": "去评分"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "気に入っています"
+            "value": "評価する"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gefällt mir"
+            "value": "Bewerten"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Me gusta"
+            "value": "Valorar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "J’aime bien"
+            "value": "Noter"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mi piace"
+            "value": "Valuta"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "마음에 들어요"
+            "value": "평가하기"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gosto"
+            "value": "Avaliar"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нравится"
+            "value": "Оценить"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "喜歡"
+            "value": "去評分"
           }
         }
       }
     },
-    "rater.prompt.negative": {
+    "rater.prompt.feedback": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not quite"
+            "value": "Feedback"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "还不够好"
+            "value": "意见反馈"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "いまひとつ"
+            "value": "フィードバック"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicht ganz"
+            "value": "Feedback"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No mucho"
+            "value": "Opinar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pas vraiment"
+            "value": "Remarques"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non molto"
+            "value": "Feedback"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "별로예요"
+            "value": "의견 보내기"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não muito"
+            "value": "Opinião"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Не совсем"
+            "value": "Написать нам"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "還不夠好"
+            "value": "意見回饋"
           }
         }
       }

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The feedback form. Shown after the negative button on the pre-prompt, or from a
+/// The feedback form. Shown after the Feedback button on the pre-prompt, or from a
 /// deliberate entry point such as a settings row.
 struct FeedbackFormView: View {
     let context: FeedbackContext

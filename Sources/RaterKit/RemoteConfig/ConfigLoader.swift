@@ -130,8 +130,8 @@ public actor ConfigLoader {
         if let prompt = response.prompt {
             copy.promptTitle = prompt.title
             copy.promptMessage = prompt.message
-            copy.positiveLabel = prompt.positiveLabel
-            copy.negativeLabel = prompt.negativeLabel
+            copy.rateLabel = prompt.rateLabel
+            copy.feedbackLabel = prompt.feedbackLabel
             copy.laterLabel = prompt.laterLabel
         }
         if let feedback = response.feedback {

@@ -86,7 +86,7 @@ public extension TriggerRule where Self == RaterRule {
         RaterRule("promptsTotal<\(limit)") { $0.promptCount < limit }
     }
 
-    /// Stop bothering someone who already tapped the positive button.
+    /// Stop bothering someone who already tapped Rate.
     static var notAfterRated: RaterRule {
         RaterRule("notAfterRated") { !$0.hasRated }
     }

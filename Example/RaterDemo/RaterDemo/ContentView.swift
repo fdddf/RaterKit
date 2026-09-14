@@ -230,8 +230,8 @@ struct ContentView: View {
         let time = Date().formatted(date: .omitted, time: .standard)
         return switch outcome {
         case .promptShown: "\(time)  prompt shown"
-        case .ratedPositive: "\(time)  positive → StoreKit review"
-        case .ratedNegative: "\(time)  negative → feedback form"
+        case .rateChosen: "\(time)  rate → App Store review page"
+        case .feedbackChosen: "\(time)  feedback → feedback form"
         case .promptDismissed: "\(time)  dismissed"
         case .optedOut: "\(time)  opted out"
         case .feedbackOpened: "\(time)  feedback form opened"

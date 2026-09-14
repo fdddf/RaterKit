@@ -116,8 +116,8 @@ public struct RaterConfiguration: Sendable {
 public struct RaterCopy: Sendable, Equatable, Codable {
     public var promptTitle: String
     public var promptMessage: String
-    public var positiveLabel: String
-    public var negativeLabel: String
+    public var rateLabel: String
+    public var feedbackLabel: String
     public var laterLabel: String
     public var feedbackTitle: String?
     public var feedbackMessage: String?
@@ -126,8 +126,8 @@ public struct RaterCopy: Sendable, Equatable, Codable {
     public init(
         promptTitle: String,
         promptMessage: String,
-        positiveLabel: String,
-        negativeLabel: String,
+        rateLabel: String,
+        feedbackLabel: String,
         laterLabel: String,
         feedbackTitle: String? = nil,
         feedbackMessage: String? = nil,
@@ -135,8 +135,8 @@ public struct RaterCopy: Sendable, Equatable, Codable {
     ) {
         self.promptTitle = promptTitle
         self.promptMessage = promptMessage
-        self.positiveLabel = positiveLabel
-        self.negativeLabel = negativeLabel
+        self.rateLabel = rateLabel
+        self.feedbackLabel = feedbackLabel
         self.laterLabel = laterLabel
         self.feedbackTitle = feedbackTitle
         self.feedbackMessage = feedbackMessage
@@ -148,14 +148,14 @@ public struct RaterCopy: Sendable, Equatable, Codable {
     public static var `default`: RaterCopy {
         RaterCopy(
             promptTitle: String(localized: "rater.prompt.title",
-                                defaultValue: "Enjoying this app?", bundle: .module),
+                                defaultValue: "Help us improve", bundle: .module),
             promptMessage: String(localized: "rater.prompt.message",
                                   defaultValue: "Your opinion matters to us — it only takes a few seconds.",
                                   bundle: .module),
-            positiveLabel: String(localized: "rater.prompt.positive",
-                                  defaultValue: "I like it", bundle: .module),
-            negativeLabel: String(localized: "rater.prompt.negative",
-                                  defaultValue: "Not quite", bundle: .module),
+            rateLabel: String(localized: "rater.prompt.rate",
+                              defaultValue: "Rate App", bundle: .module),
+            feedbackLabel: String(localized: "rater.prompt.feedback",
+                                  defaultValue: "Feedback", bundle: .module),
             laterLabel: String(localized: "rater.prompt.later",
                                defaultValue: "Maybe later", bundle: .module),
             categories: [

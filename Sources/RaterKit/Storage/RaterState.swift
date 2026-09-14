@@ -21,7 +21,7 @@ public struct RaterState: Codable, Sendable, Equatable {
     /// How many were shown per app version.
     public var promptCountByVersion: [String: Int]
 
-    /// The user tapped the positive button, so we assume they went on to rate.
+    /// The user tapped Rate, so we assume they went on to rate.
     public var hasRated: Bool
     /// The user explicitly asked not to be prompted again.
     public var hasOptedOut: Bool

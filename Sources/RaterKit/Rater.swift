@@ -222,28 +222,35 @@ public final class Rater {
 
     // MARK: - Prompt callbacks (invoked by the UI layer)
 
-    func handlePositive() {
+    /// The user tapped Rate.
+    ///
+    /// Goes to the App Store's write-review page rather than `requestReview`: the system
+    /// prompt is throttled and may silently not appear, and a button that does nothing
+    /// when tapped is worse than one that leaves the app. The system prompt is only the
+    /// fallback for a configuration with no App Store id.
+    func handleRate() {
         store.mutate { $0.hasRated = true }
         presentation = nil
-        emit(.ratedPositive)
+        emit(.rateChosen)
 
+        guard !openWriteReviewPage() else { return }
         Task {
             let requester = reviewRequester ?? StoreKitReviewRequester()
             await requester.requestReview()
         }
     }
 
-    func handleNegative() {
-        recordNegative()
+    func handleFeedback() {
+        recordFeedbackChoice()
         presentFeedbackForm()
     }
 
-    /// The negative answer on its own, for a presenter that opens the form itself.
+    /// The Feedback choice on its own, for a presenter that opens the form itself.
     /// Raising the shared form from here would ask a screen that is already inside
     /// a sheet to present a second one.
-    func recordNegative() {
+    func recordFeedbackChoice() {
         presentation = nil
-        emit(.ratedNegative)
+        emit(.feedbackChosen)
     }
 
     func handleDismiss(optOut: Bool) {

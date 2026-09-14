@@ -20,7 +20,7 @@ public extension View {
     /// sheet the app has open — a prompt raised from inside one is drawn where nobody
     /// can see it, and only turns up once the sheet is gone. This one presents itself,
     /// above the screen it is attached to, and brings its own feedback form for the
-    /// negative answer:
+    /// Feedback button:
     /// ```swift
     /// Button("Rate this app") { showsRating = true }
     /// …
@@ -56,8 +56,8 @@ struct RaterHostModifier: ViewModifier {
                     RatingPromptView(
                         copy: copy,
                         theme: rater.currentTheme,
-                        onPositive: { rater.handlePositive() },
-                        onNegative: { rater.handleNegative() },
+                        onRate: { rater.handleRate() },
+                        onFeedback: { rater.handleFeedback() },
                         onDismiss: { rater.handleDismiss(optOut: $0) }
                     )
                     .transition(.opacity)
@@ -149,17 +149,17 @@ struct RaterPromptSheetModifier: ViewModifier {
                     RatingPromptView(
                         copy: copy,
                         theme: rater.currentTheme,
-                        onPositive: {
+                        onRate: {
                             dismissCard()
-                            rater.handlePositive()
+                            rater.handleRate()
                         },
-                        onNegative: {
+                        onFeedback: {
                             // The form is opened from the cover's dismissal rather than
                             // here: a sheet raised while the cover is still on its way
                             // out never arrives.
                             wantsFeedback = true
                             dismissCard()
-                            rater.recordNegative()
+                            rater.recordFeedbackChoice()
                         },
                         onDismiss: { optOut in
                             dismissCard()

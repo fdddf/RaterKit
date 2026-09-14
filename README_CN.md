@@ -4,17 +4,17 @@
 
 App 评分引导 + 用户反馈收集的 iOS 客户端。Swift Package，iOS 17+，纯 SwiftUI，零三方依赖。
 
-在你自定义的时机弹出预询问；用户满意就走系统评分弹窗，不满意就打开内建反馈表单（邮箱 + 正文 + 截图 + 设备/版本信息）。
+在你自定义的时机弹出预询问，把「去评分」和「意见反馈」两个选项并排给所有用户：评分跳 App Store 写评价页，反馈打开内建表单（邮箱 + 正文 + 截图 + 设备/版本信息）。不按用户的好恶分流 —— 只把满意用户引去评分属于 review gating，会被审核以 5.6.1 拒掉。
 
 ```
                         ┌──────────────┐
    你的 App ──触发──▶  │  预询问弹窗   │ ← 文案由服务端下发，改文案不用发版
                         └──────┬───────┘
-                     「喜欢」   │   「不喜欢」
+                    「去评分」  │  「意见反馈」
                    ┌───────────┴───────────┐
                    ▼                       ▼
-          系统评分弹窗              内建反馈表单
-      (AppStore.requestReview)   邮箱/正文/截图/设备信息
+        App Store 写评价页          内建反馈表单
+        (write-review 链接)      邮箱/正文/截图/设备信息
                                           │
                                           ▼
                                     rater-collector
@@ -27,7 +27,7 @@ App 评分引导 + 用户反馈收集的 iOS 客户端。Swift Package，iOS 17+
 `Package.swift` 或 Xcode → Add Package Dependency：
 
 ```swift
-.package(url: "https://github.com/fdddf/RaterKit.git", from: "1.0.0")
+.package(url: "https://github.com/fdddf/RaterKit.git", from: "2.0.0")
 ```
 
 ## 用起来

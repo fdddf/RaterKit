@@ -53,7 +53,7 @@ struct APIClientTests {
         #expect(etag == "\"v1\"")
         #expect(config.enabled)
         #expect(config.appStoreID == "123456789")
-        #expect(config.prompt?.positiveLabel == "Yes")
+        #expect(config.prompt?.rateLabel == "Yes")
         #expect(config.feedback?.emailRequired == true)
         #expect(config.rules?.minLaunchCount == 3)
     }
