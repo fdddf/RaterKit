@@ -134,12 +134,34 @@ struct ContentView: View {
                 Label("Report a problem (preselected category)", systemImage: "ladybug")
             }
 
+            // Conversations have no fixed home: the app puts the entry where it fits and
+            // badges it with the unread count, which RaterKit keeps current.
+            NavigationLink {
+                RaterConversationsView()
+            } label: {
+                Label("My feedback (conversations)", systemImage: "bubble.left.and.text.bubble.right")
+                    .badge(rater.unreadCount)
+            }
+
             Button {
                 if !rater.openWriteReviewPage() {
                     flash("No App Store ID configured")
                 }
             } label: {
                 Label("Open the App Store review page", systemImage: "link")
+            }
+
+            Button(role: .destructive) {
+                Task {
+                    do {
+                        try await rater.deleteConversationHistory()
+                        flash("Feedback history deleted from the server")
+                    } catch {
+                        flash("Delete failed: \(error.localizedDescription)")
+                    }
+                }
+            } label: {
+                Label("Delete my feedback history", systemImage: "trash.slash")
             }
 
             Button(role: .destructive) {

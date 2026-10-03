@@ -75,6 +75,30 @@ Rater.shared.presentFeedbackForm()        // open the feedback form directly
 
 In SwiftUI, attach `.raterPrompt()` to your root view. A settings screen presented as a sheet is *above* that root, so a prompt raised from inside one would be drawn where nobody can see it: use the two standalone entries instead — `.raterRatingPrompt(isPresented:)` for a "Rate this app" row and `.raterFeedbackSheet(isPresented:)` for "Send feedback". Both present themselves and neither depends on `.raterPrompt()`. UIKit hosts use `RaterUIKitPresenter`.
 
+## Conversations
+
+Every feedback a device sends becomes a conversation: the user can read your replies and write back from inside the app, and you answer from the rater-collector console. RaterKit has no opinion on where that lives — put the entry wherever it fits, and badge it with `unreadCount`:
+
+```swift
+// Inside your own NavigationStack, e.g. a settings row
+NavigationLink {
+    RaterConversationsView()
+} label: {
+    Label("My feedback", systemImage: "bubble.left.and.text.bubble.right")
+        .badge(Rater.shared.unreadCount)
+}
+
+// Or anywhere, as a sheet of its own
+Button("My feedback") { showsConversations = true }
+    .raterConversations(isPresented: $showsConversations)
+```
+
+- `Rater.shared.unreadCount` is observable. RaterKit refreshes it at launch, whenever the app returns to the foreground, and as conversations are read — but only once the device has sent feedback (`hasConversations`), so an app whose users never write in sends no extra requests.
+- Conversations poll: every 5 seconds while one is open, every 15 while the list is. Nothing runs in the background, and there are no push notifications.
+- Messages written offline are queued like submissions and sent when the network returns.
+- Ownership is per install: a random token kept in the Keychain, sent with each feedback. It survives a reinstall and moves with an encrypted backup, but not to another device.
+- `try await Rater.shared.deleteConversationHistory()` erases everything this device has sent from the server and starts a fresh history — for a "delete my data" row.
+
 ## Trigger rules
 
 This is the main thing you'll customize. **Every** rule must pass before the pre-prompt appears:
@@ -115,6 +139,7 @@ print(decision.blockedBy)   // e.g. ["launchCount(atLeast: 5)", "cooldown(days: 
 - **Screenshots** downsampled and JPEG-compressed (long edge 1600px, quality 0.7 by default).
 - **Diagnostics** collected and shown to the user in the form, so they can see exactly what will be sent.
 - **Telemetry** batched and free of user identifiers.
+- **Privacy manifest** (`PrivacyInfo.xcprivacy`) declaring what the SDK collects and why, which Xcode folds into your app's privacy report. Your App Store privacy labels still need to say the same.
 - **String Catalog** — 11 languages (en, de, es, fr, it, ja, ko, pt, ru, zh-Hans, zh-Hant), with English as the source language. This covers the form's own chrome; the pre-prompt copy and category labels come from remote config, so translate those in the admin console.
 
 The three privacy-relevant behaviors each have their own switch: `collectsDiagnostics`, `isTelemetryEnabled`, `isOfflineRetryEnabled`.

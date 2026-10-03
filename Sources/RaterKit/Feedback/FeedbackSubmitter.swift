@@ -8,11 +8,11 @@ import os
 /// matters far more than the pictures.
 actor FeedbackSubmitter {
     private let client: RaterAPIClient
-    private let outbox: Outbox
+    private let outbox: Outbox<PendingSubmission>
     private let isOfflineRetryEnabled: Bool
     private let logger = Logger(subsystem: "com.raterkit", category: "submit")
 
-    init(client: RaterAPIClient, outbox: Outbox, isOfflineRetryEnabled: Bool) {
+    init(client: RaterAPIClient, outbox: Outbox<PendingSubmission>, isOfflineRetryEnabled: Bool) {
         self.client = client
         self.outbox = outbox
         self.isOfflineRetryEnabled = isOfflineRetryEnabled

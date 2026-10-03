@@ -75,6 +75,30 @@ Rater.shared.presentFeedbackForm()        // 直接打开反馈表单
 
 SwiftUI 挂载：根视图加 `.raterPrompt()`。设置页若本身是 sheet，它盖在根视图之上，从里面弹出的评分卡会被画在看不见的地方——改用两个独立入口：评分行用 `.raterRatingPrompt(isPresented:)`，反馈行用 `.raterFeedbackSheet(isPresented:)`，两者都自带弹出层，不依赖 `.raterPrompt()`。UIKit 宿主用 `RaterUIKitPresenter`。
 
+## 会话
+
+设备发出的每条反馈都会变成一个会话：用户可以在 app 里看到你的回复并接着回，你在 rater-collector 后台作答。入口放在哪由宿主 app 决定，再用 `unreadCount` 给它加角标：
+
+```swift
+// 放在自己的 NavigationStack 里，比如设置页的一行
+NavigationLink {
+    RaterConversationsView()
+} label: {
+    Label("我的反馈", systemImage: "bubble.left.and.text.bubble.right")
+        .badge(Rater.shared.unreadCount)
+}
+
+// 或者放在任何地方，自带 sheet
+Button("我的反馈") { showsConversations = true }
+    .raterConversations(isPresented: $showsConversations)
+```
+
+- `Rater.shared.unreadCount` 可被观察。RaterKit 会在启动、每次回到前台、以及会话被读过之后刷新它 —— 但只在这台设备发过反馈之后（`hasConversations`）才会请求，用户从不写反馈的 app 不会多出任何请求。
+- 会话靠轮询：打开某个会话时每 5 秒一次，列表页每 15 秒一次。后台不跑任何东西，也没有推送通知。
+- 离线时写的消息会和反馈提交一样进入队列，网络恢复后自动发出。
+- 归属按安装区分：一个存在 Keychain 里的随机 token，随每条反馈一起发送。卸载重装后还在，加密备份迁移到新手机也会带过去，但不会同步到别的设备。
+- `try await Rater.shared.deleteConversationHistory()` 会从服务端删除这台设备发过的所有内容，并开始一份新的历史 —— 适合放在"删除我的数据"一类入口。
+
 ## 触发规则
 
 这是主要的可定制点。所有规则**全部通过**才会弹：
@@ -115,6 +139,7 @@ print(decision.blockedBy)   // 例如 ["launchCount(atLeast: 5)", "cooldown(days
 - **截图**自动降采样 + JPEG 压缩（默认长边 1600px / 质量 0.7）
 - **诊断信息**采集，并在表单里对用户透明展示「将会发送什么」
 - **埋点**批量上报，不含任何用户标识
+- **隐私清单**（`PrivacyInfo.xcprivacy`）声明 SDK 收集了什么、用途是什么，Xcode 会把它合并进 app 的隐私报告。App Store 的隐私标签仍需要你填写一致的内容
 - **String Catalog** 共 11 种语言（en / de / es / fr / it / ja / ko / pt / ru / zh-Hans / zh-Hant，源语言 en）。这里只包含表单自身的界面文案；触发弹窗的文案和分类标签来自远程配置，需要在后台翻译。
 
 隐私相关的三个开关都可以单独关：`collectsDiagnostics`、`isTelemetryEnabled`、`isOfflineRetryEnabled`。

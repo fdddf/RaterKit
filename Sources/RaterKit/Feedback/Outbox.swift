@@ -1,10 +1,21 @@
 import Foundation
 import os
 
+/// Something the outbox can hold: keyed by its idempotency key, so re-queuing the same
+/// item overwrites rather than piling up, and the server dedupes a replay of one that did
+/// land after all.
+protocol OutboxItem: Codable, Sendable {
+    var idempotencyKey: String { get }
+    var queuedAt: Date { get }
+    /// How many attempts have been made. Past the cap it is dropped, so one bad entry
+    /// can't wedge the head of the queue forever.
+    var attempts: Int { get set }
+}
+
 /// One feedback waiting to be resent. Attachment bytes are inlined — a compressed
 /// screenshot is only a few hundred KB, not worth storing separately and then having
 /// to keep the references in sync.
-struct PendingSubmission: Codable, Sendable {
+struct PendingSubmission: OutboxItem {
     var idempotencyKey: String
     var message: String
     var category: String?
@@ -13,8 +24,6 @@ struct PendingSubmission: Codable, Sendable {
     var device: DiagnosticsPayload
     var attachments: [Payload]
     var queuedAt: Date
-    /// How many attempts have been made. Past the cap it is dropped, so one bad entry
-    /// can't wedge the head of the queue forever.
     var attempts: Int
 
     struct Payload: Codable, Sendable {
@@ -23,12 +32,12 @@ struct PendingSubmission: Codable, Sendable {
     }
 }
 
-/// On-disk queue for failed submissions, replayed on next launch or when the network
-/// comes back.
+/// On-disk queue for failed sends, replayed on next launch or when the network comes back.
+/// One instance per kind of item, each in its own directory.
 ///
 /// Lives in Caches: losing it costs nothing in correctness (the user already saw
 /// "sent"), and it isn't worth consuming their backup quota.
-actor Outbox {
+actor Outbox<Item: OutboxItem> {
     /// Cap on queued entries, so repeated offline submissions can't fill the disk.
     private let maxEntries = 20
     /// Cap on retries for a single entry.
@@ -37,13 +46,15 @@ actor Outbox {
     private let directory: URL?
     private let logger = Logger(subsystem: "com.raterkit", category: "outbox")
 
-    init(appID: String) {
+    /// `name` keeps each kind of item in its own directory. The default is the one
+    /// submissions have always used, so a queue written by an older version still replays.
+    init(appID: String, name: String = "outbox") {
         directory = FileManager.default
             .urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appending(path: "RaterKit/outbox-\(appID)", directoryHint: .isDirectory)
+            .appending(path: "RaterKit/\(name)-\(appID)", directoryHint: .isDirectory)
     }
 
-    func enqueue(_ submission: PendingSubmission) {
+    func enqueue(_ submission: Item) {
         guard let directory else { return }
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -59,7 +70,7 @@ actor Outbox {
         }
     }
 
-    func pending() -> [PendingSubmission] {
+    func pending() -> [Item] {
         guard let directory,
               let urls = try? FileManager.default.contentsOfDirectory(
                   at: directory, includingPropertiesForKeys: nil
@@ -68,9 +79,9 @@ actor Outbox {
 
         return urls
             .filter { $0.pathExtension == "json" }
-            .compactMap { url -> PendingSubmission? in
+            .compactMap { url -> Item? in
                 guard let data = try? Data(contentsOf: url),
-                      let item = try? JSONDecoder.rater.decode(PendingSubmission.self, from: data)
+                      let item = try? JSONDecoder.rater.decode(Item.self, from: data)
                 else {
                     // Undecodable usually means an old format or a torn write — just drop it.
                     try? FileManager.default.removeItem(at: url)
@@ -91,7 +102,7 @@ actor Outbox {
     /// Records a failed attempt. Drops the entry once the retry cap is hit;
     /// returns true when it was given up on.
     @discardableResult
-    func recordAttempt(_ submission: PendingSubmission) -> Bool {
+    func recordAttempt(_ submission: Item) -> Bool {
         var updated = submission
         updated.attempts += 1
         if updated.attempts >= maxAttempts {

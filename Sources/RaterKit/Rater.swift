@@ -1,6 +1,7 @@
 import Foundation
 import Network
 import SwiftUI
+import UIKit
 import os
 
 /// RaterKit's main entry point.
@@ -10,6 +11,10 @@ import os
 /// ContentView().raterPrompt()          // mount the presentation host
 /// Rater.shared.record(event: "export") // record meaningful moments
 /// ```
+///
+/// Conversations about feedback already sent have no fixed place in your UI: put
+/// `RaterConversationsView` (or `.raterConversations(isPresented:)`) wherever suits the
+/// app, and badge that entry with `unreadCount`.
 @MainActor
 @Observable
 public final class Rater {
@@ -21,14 +26,21 @@ public final class Rater {
     /// Stream of everything that happens, to feed your own analytics.
     public var events: AsyncStream<RaterOutcome> { eventStream }
 
+    /// Replies from you that this device hasn't read yet, across all its conversations —
+    /// for a badge on whatever entry point leads to `RaterConversationsView`. Refreshed at
+    /// launch, whenever the app returns to the foreground, and as conversations are read.
+    public internal(set) var unreadCount = 0
+
     @ObservationIgnored private var configuration: RaterConfiguration?
     @ObservationIgnored private var store: any RaterStore = InMemoryStore()
     @ObservationIgnored private var client: RaterAPIClient?
     @ObservationIgnored private var configLoader: ConfigLoader?
     @ObservationIgnored private var submitter: FeedbackSubmitter?
     @ObservationIgnored private var telemetry: TelemetryReporter?
-    @ObservationIgnored private var outbox: Outbox?
+    @ObservationIgnored private var outbox: Outbox<PendingSubmission>?
+    @ObservationIgnored private var conversations: ConversationService?
     @ObservationIgnored private var pathMonitor: NWPathMonitor?
+    @ObservationIgnored private var foregroundObserver: (any NSObjectProtocol)?
 
     /// The most recently fetched remote config, reused by the form and telemetry.
     @ObservationIgnored private var remoteConfig: RemotePromptConfig?
@@ -58,19 +70,30 @@ public final class Rater {
         shared.apply(configuration)
     }
 
-    func apply(_ configuration: RaterConfiguration, transport: (any HTTPTransport)? = nil) {
+    func apply(
+        _ configuration: RaterConfiguration,
+        transport: (any HTTPTransport)? = nil,
+        reporter: (any ReporterTokenStore)? = nil
+    ) {
         self.configuration = configuration
         store = UserDefaultsStore(suiteName: configuration.userDefaultsSuiteName)
 
+        let reporter = reporter ?? KeychainReporterTokenStore(appID: configuration.appID)
         let client = RaterAPIClient(
             endpoint: configuration.endpoint,
             apiKey: configuration.apiKey,
-            transport: transport ?? URLSession.shared
+            transport: transport ?? URLSession.shared,
+            reporter: reporter
         )
         self.client = client
 
-        let outbox = Outbox(appID: configuration.appID)
+        let outbox = Outbox<PendingSubmission>(appID: configuration.appID)
         self.outbox = outbox
+        conversations = ConversationService(
+            client: client,
+            outbox: Outbox<PendingMessage>(appID: configuration.appID, name: "messages"),
+            reporter: reporter
+        )
         configLoader = ConfigLoader(
             client: client, ttl: configuration.configCacheTTL,
             fallbackCopy: configuration.fallbackCopy, appID: configuration.appID
@@ -86,11 +109,13 @@ public final class Rater {
         if configuration.isOfflineRetryEnabled {
             startNetworkMonitor()
         }
+        observeForeground()
 
         Task { [weak self] in
             // Warm the copy now so nothing has to be fetched at the moment we prompt.
             await self?.refreshRemoteConfig()
             await self?.submitter?.flushOutbox()
+            await self?.flushConversations()
         }
     }
 
@@ -202,6 +227,9 @@ public final class Rater {
     }
 
     /// Clears all local state (launch counts, event counts, prompt history). For debugging.
+    ///
+    /// The device keeps its conversation identity, so the threads it sent are still on the
+    /// server and still its own — `deleteConversationHistory()` is what erases those.
     public func resetLocalState() {
         store.clear()
         Task {
@@ -218,6 +246,58 @@ public final class Rater {
     /// How many submissions are still waiting to be sent.
     public func pendingFeedbackCount() async -> Int {
         await outbox?.count ?? 0
+    }
+
+    // MARK: - Conversations
+
+    /// Whether this device has sent feedback, and so has conversations to show — for
+    /// hiding an entry point that would only ever lead to an empty list.
+    public var hasConversations: Bool {
+        store.load().lastFeedbackDate != nil
+    }
+
+    /// Re-reads `unreadCount` from the server. RaterKit already does this at launch and on
+    /// every return to the foreground; call it yourself only when a screen that shows the
+    /// badge appears and you want it current to the second.
+    ///
+    /// Asks nothing of the server until this device has sent feedback.
+    public func refreshUnreadCount() async {
+        guard hasConversations, let conversations else { return }
+        do {
+            unreadCount = try await conversations.inbox().unreadCount
+        } catch {
+            // The badge keeps its last value; the next foreground tries again.
+            if configuration?.isDebugLoggingEnabled == true {
+                logger.notice("unread count refresh failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    /// Erases everything this device has sent — feedback, conversations, screenshots —
+    /// from the server, and starts a fresh, empty history. For a "delete my data" row in
+    /// your settings. Throws if the server couldn't be reached, in which case nothing
+    /// changed and it is safe to try again.
+    public func deleteConversationHistory() async throws {
+        guard let conversations else { throw RaterError.notConfigured }
+        try await conversations.deleteHistory()
+        store.mutate { $0.lastFeedbackDate = nil }
+        unreadCount = 0
+    }
+
+    var conversationService: ConversationService? { conversations }
+
+    /// The server listed threads for this device, so it has conversations whatever local
+    /// state says — a reinstall clears UserDefaults but the Keychain token survives it.
+    func noteConversationsExist() {
+        guard !hasConversations else { return }
+        store.mutate { $0.lastFeedbackDate = $0.lastFeedbackDate ?? Date() }
+    }
+
+    /// The label the current copy gives a category id, for the conversation list.
+    func categoryLabel(for id: String?) -> String? {
+        guard let id else { return nil }
+        let categories = remoteConfig?.copy.categories ?? configuration?.fallbackCopy.categories ?? []
+        return categories.first { $0.id == id }?.label
     }
 
     // MARK: - Prompt callbacks (invoked by the UI layer)
@@ -273,6 +353,10 @@ public final class Rater {
 
         var draft = draft
         draft.metadata.merge(extraMetadata) { current, _ in current }
+
+        // From here on this device has a conversation to follow, so the unread badge is
+        // worth asking the server about.
+        store.mutate { $0.lastFeedbackDate = Date() }
 
         // Remember the email so it doesn't have to be typed again.
         if let email = draft.email?.trimmingCharacters(in: .whitespaces), !email.isEmpty {
@@ -370,10 +454,32 @@ public final class Rater {
             Task { @MainActor [weak self] in
                 await self?.submitter?.flushOutbox()
                 await self?.telemetry?.flush()
+                await self?.flushConversations()
             }
         }
         monitor.start(queue: DispatchQueue(label: "com.raterkit.network"))
         pathMonitor = monitor
+    }
+
+    /// Back in the foreground is when a reply is most likely to be waiting — and when a
+    /// badge on the host's entry point is about to be looked at.
+    private func observeForeground() {
+        guard foregroundObserver == nil else { return }
+        foregroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                await self?.flushConversations()
+            }
+        }
+    }
+
+    /// Sends what was queued, then refreshes the badge — in that order, so a reply to a
+    /// message that was only just delivered isn't counted before the message exists.
+    private func flushConversations() async {
+        guard hasConversations else { return }
+        await conversations?.flush()
+        await refreshUnreadCount()
     }
 }
 

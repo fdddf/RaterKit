@@ -106,3 +106,113 @@ struct APIErrorBody: Decodable, Sendable {
     }
     var error: Detail
 }
+
+// MARK: - Conversations
+
+/// One thread in `GET /v1/threads`: a feedback this device sent, and where it stands.
+struct ThreadSummary: Decodable, Sendable, Equatable, Identifiable {
+    var id: String
+    var createdAt: Date
+    var lastMessageAt: Date
+    /// `open` or `resolved`. Anything else reads as open.
+    var status: String
+    var category: String?
+    /// The latest message, cut short by the server.
+    var preview: String
+    /// Who spoke last: `user` or `admin`.
+    var lastAuthor: String
+    var unreadCount: Int
+
+    var isResolved: Bool { status == "resolved" }
+
+    enum CodingKeys: String, CodingKey {
+        case id, status, category, preview
+        case createdAt = "created_at"
+        case lastMessageAt = "last_message_at"
+        case lastAuthor = "last_author"
+        case unreadCount = "unread_count"
+    }
+}
+
+/// Response of `GET /v1/threads`.
+struct ThreadPage: Decodable, Sendable {
+    var items: [ThreadSummary]
+    /// Pass back as `before` for the next page; nil on the last one.
+    var nextBefore: Int64?
+
+    enum CodingKeys: String, CodingKey {
+        case items
+        case nextBefore = "next_before"
+    }
+}
+
+/// The header of `GET /v1/threads/:id` — the summary plus the opening message in full.
+struct ThreadDetail: Decodable, Sendable, Equatable {
+    var summary: ThreadSummary
+    var message: String
+    var attachmentCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case message
+        case attachmentCount = "attachment_count"
+    }
+
+    init(from decoder: any Decoder) throws {
+        // The server flattens the summary fields into the same object.
+        summary = try ThreadSummary(from: decoder)
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        message = try container.decode(String.self, forKey: .message)
+        attachmentCount = try container.decode(Int.self, forKey: .attachmentCount)
+    }
+}
+
+/// One message after the feedback itself.
+struct ThreadMessage: Decodable, Sendable, Equatable, Identifiable {
+    /// Ordering, and the cursor for `after=` and the read marker.
+    var seq: Int64
+    var id: String
+    /// `user` or `admin`.
+    var author: String
+    var body: String
+    var createdAt: Date
+
+    var isFromUser: Bool { author == "user" }
+
+    enum CodingKeys: String, CodingKey {
+        case seq, id, author, body
+        case createdAt = "created_at"
+    }
+}
+
+/// Response of `GET /v1/threads/:id`.
+struct ThreadResponse: Decodable, Sendable {
+    var thread: ThreadDetail
+    var messages: [ThreadMessage]
+}
+
+/// Request body of `POST /v1/threads/:id/messages`.
+struct ThreadMessageBody: Encodable, Sendable {
+    var idempotencyKey: String
+    var body: String
+
+    enum CodingKeys: String, CodingKey {
+        case body
+        case idempotencyKey = "idempotency_key"
+    }
+}
+
+/// Response of `POST /v1/threads/:id/messages`.
+struct ThreadMessageResponse: Decodable, Sendable {
+    var message: ThreadMessage
+}
+
+/// Response of `GET /v1/inbox`.
+struct InboxResponse: Decodable, Sendable, Equatable {
+    var unreadCount: Int
+    var unreadThreads: Int
+
+    enum CodingKeys: String, CodingKey {
+        case unreadCount = "unread_count"
+        case unreadThreads = "unread_threads"
+    }
+}

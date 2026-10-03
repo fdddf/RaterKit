@@ -29,6 +29,10 @@ public struct RaterState: Codable, Sendable, Equatable {
     /// The email used last time, prefilled on the next submission.
     public var lastEmail: String?
 
+    /// When feedback was last sent from this device. Optional on purpose: a state saved
+    /// by an older version has no such key, and only optionals decode from a missing key.
+    public var lastFeedbackDate: Date?
+
     public init(
         installDate: Date = Date(),
         launchCount: Int = 0,
@@ -40,7 +44,8 @@ public struct RaterState: Codable, Sendable, Equatable {
         promptCountByVersion: [String: Int] = [:],
         hasRated: Bool = false,
         hasOptedOut: Bool = false,
-        lastEmail: String? = nil
+        lastEmail: String? = nil,
+        lastFeedbackDate: Date? = nil
     ) {
         self.installDate = installDate
         self.launchCount = launchCount
@@ -53,5 +58,6 @@ public struct RaterState: Codable, Sendable, Equatable {
         self.hasRated = hasRated
         self.hasOptedOut = hasOptedOut
         self.lastEmail = lastEmail
+        self.lastFeedbackDate = lastFeedbackDate
     }
 }

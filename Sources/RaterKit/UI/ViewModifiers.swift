@@ -37,6 +37,19 @@ public extension View {
     func raterFeedbackSheet(isPresented: Binding<Bool>, category: String? = nil) -> some View {
         modifier(RaterFeedbackSheetModifier(isPresented: isPresented, category: category))
     }
+
+    /// The user's feedback and your replies to it, in a sheet of its own — for an entry
+    /// point that isn't inside a navigation stack, such as a button or a menu item:
+    /// ```swift
+    /// Button("My feedback") { showsConversations = true }
+    /// …
+    /// .raterConversations(isPresented: $showsConversations)
+    /// ```
+    /// `Rater.shared.unreadCount` is there for a badge on that entry point.
+    /// Where there is a navigation stack, push `RaterConversationsView` instead.
+    func raterConversations(isPresented: Binding<Bool>) -> some View {
+        modifier(RaterConversationsSheetModifier(isPresented: isPresented))
+    }
 }
 
 /// Hosts the pre-prompt overlay and the feedback sheet.

@@ -12,7 +12,7 @@ private let createdJSON = """
 
 private func makeSubmitter(
     _ transport: MockTransport,
-    outbox: Outbox,
+    outbox: Outbox<PendingSubmission>,
     offlineRetry: Bool = true
 ) -> FeedbackSubmitter {
     FeedbackSubmitter(
@@ -23,7 +23,7 @@ private func makeSubmitter(
 }
 
 /// A separate queue directory per test, so they cannot interfere with each other.
-private func makeOutbox() -> Outbox {
+private func makeOutbox() -> Outbox<PendingSubmission> {
     Outbox(appID: "test-\(UUID().uuidString)")
 }
 
